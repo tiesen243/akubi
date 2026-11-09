@@ -1,3 +1,4 @@
+import { cloudflare } from '@cloudflare/vite-plugin'
 import { reactRouter } from '@react-router/dev/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite-plus'
@@ -5,7 +6,11 @@ import { defineConfig } from 'vite-plus'
 import fmt from './oxfmt.config'
 
 export default defineConfig({
-  plugins: [reactRouter(), tailwindcss()],
+  plugins: [
+    reactRouter(),
+    tailwindcss(),
+    cloudflare({ viteEnvironment: { name: 'ssr' } }),
+  ],
   resolve: { tsconfigPaths: true },
   fmt,
 
