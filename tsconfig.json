@@ -32,6 +32,12 @@
       "@/*": ["./app/*"]
     }
   },
-  "include": ["app/**/*.ts", "app/**/*.tsx", ".react-router/types/**/*"],
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "workers/**/*.ts",
+    ".react-router/types/**/*",
+    ".cloudflare/types"
+  ],
   "exclude": ["node_modules", "build"]
 }

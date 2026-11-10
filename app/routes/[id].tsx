@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query'
 import {
   ensureEntry,
+  fromHandle,
   loadHandles,
 } from '@trpc/tanstack-react-query/unstable-handles'
 import { Suspense } from 'react'
@@ -22,7 +23,7 @@ export const loader = async ({ context, params }: Route.LoaderArgs) => {
     post: ensureEntry(trpc.post.one, parseInt(params.id, 10)),
   })
 
-  return { dehydratedState: dehydrate(queryClient), ...handles, post }
+  return { dehydratedState: dehydrate(queryClient), handles, post }
 }
 
 export const meta: Route.MetaFunction = ({ loaderData }) => [
@@ -43,15 +44,17 @@ export default function PostDetailsPage({
           key={params.id}
           fallback={<Typography>Loading post details...</Typography>}
         >
-          <PostDetails id={parseInt(params.id, 10)} />
+          <PostDetails {...loaderData.handles} />
         </Suspense>
       </main>
     </HydrationBoundary>
   )
 }
 
-const PostDetails: React.FC<{ id: number }> = ({ id }) => {
-  const { data } = useSuspenseQuery(trpc.post.one.queryOptions(id))
+const PostDetails: React.FC<Route.ComponentProps['loaderData']['handles']> = ({
+  post,
+}) => {
+  const { data } = useSuspenseQuery(fromHandle(trpc, post))
 
   return (
     <>

@@ -1,4 +1,6 @@
 import { handler } from '@/server'
 
-export const loader = ({ request }: { request: Request }) => handler(request)
-export const action = ({ request }: { request: Request }) => handler(request)
+import type { Route } from './+types/trpc'
+
+export const loader = ({ request }: Route.LoaderArgs) => handler(request)
+export const action = ({ request }: Route.ActionArgs) => handler(request)

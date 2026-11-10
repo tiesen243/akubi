@@ -6,6 +6,7 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query'
 import {
+  fromHandle,
   loadHandles,
   prefetchEntry,
 } from '@trpc/tanstack-react-query/unstable-handles'
@@ -27,14 +28,17 @@ import { trpcContext } from '@/lib/trpc/server'
 
 import type { Route } from './+types/_index'
 
-export const loader = async ({ context }: Route.LoaderArgs) => {
+export const loader = async ({ context, url }: Route.LoaderArgs) => {
   const { queryClient, trpc } = context.get(trpcContext)
 
+  const page = parseInt(url.searchParams.get('page') ?? '1', 10)
+  const limit = parseInt(url.searchParams.get('limit') ?? '10', 10)
+
   const [handles] = await loadHandles(trpc, {
-    posts: prefetchEntry(trpc.post.all),
+    posts: prefetchEntry(trpc.post.all, { page, limit }),
   })
 
-  return { dehydratedState: dehydrate(queryClient), ...handles }
+  return { dehydratedState: dehydrate(queryClient), handles }
 }
 
 export default function IndexPage({ loaderData }: Route.ComponentProps) {
@@ -46,15 +50,17 @@ export default function IndexPage({ loaderData }: Route.ComponentProps) {
         <CreatePost />
 
         <Suspense fallback={<Typography>Loading posts...</Typography>}>
-          <PostList />
+          <PostList {...loaderData.handles} />
         </Suspense>
       </main>
     </HydrationBoundary>
   )
 }
 
-const PostList: React.FC = () => {
-  const { data } = useSuspenseQuery(trpc.post.all.queryOptions())
+const PostList: React.FC<Route.ComponentProps['loaderData']['handles']> = ({
+  posts,
+}) => {
+  const { data } = useSuspenseQuery(fromHandle(trpc, posts))
 
   return (
     <section className='grid gap-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'>

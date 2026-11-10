@@ -6,7 +6,12 @@ import { createTRPCRouter, publicProcedure } from '@/server/trpc'
 const postService = new PostService()
 
 export const postRouter = createTRPCRouter({
-  all: publicProcedure.query(() => postService.all()),
+  all: publicProcedure
+    .input(
+      (value): { page: number; limit: number } =>
+        value as { page: number; limit: number }
+    )
+    .query(() => postService.all()),
 
   one: publicProcedure
     .input((value): Post['id'] => parseInt(value as string, 10))

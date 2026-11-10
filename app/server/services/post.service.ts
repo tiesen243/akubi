@@ -1,46 +1,51 @@
-export class Post {
-  constructor(
-    public id: number,
-    public title: string,
-    public content: string
-  ) {}
+import { env } from 'cloudflare:workers'
+
+export interface Post {
+  id: number
+  title: string
+  content: string
 }
 
 export class PostService {
-  private posts: Post[] = [
-    new Post(1, 'First Post', 'This is the content of the first post.'),
-  ]
+  constructor(private readonly db = env.DB) {}
 
-  all() {
-    return this.posts
+  async all() {
+    const posts = await this.db.prepare('SELECT * FROM posts').all<Post>()
+    return posts.results
   }
 
-  one(id: number) {
-    const post = this.posts.find((post) => post.id === id)
+  async one(id: number) {
+    const post = await this.db
+      .prepare('SELECT * FROM posts WHERE id = ?')
+      .bind(id)
+      .first<Post>()
     if (!post) throw new Error(`Post with id ${id} not found`)
     return post
   }
 
-  create(post: Omit<Post, 'id'>) {
-    const newId =
-      this.posts.length > 0 ? Math.max(...this.posts.map((p) => p.id)) + 1 : 1
-    const newPost = new Post(newId, post.title, post.content)
-    this.posts.push(newPost)
-
-    return post
+  async create(post: Omit<Post, 'id'>) {
+    const result = await this.db
+      .prepare('INSERT INTO posts (title, content) VALUES (?, ?)')
+      .bind(post.title, post.content)
+      .run()
+    if (!result.success) throw new Error('Failed to create post')
   }
 
-  update(id: number, updatedPost: Partial<Omit<Post, 'id'>>) {
-    const postIndex = this.posts.findIndex((post) => post.id === id)
-    if (postIndex === -1) throw new Error(`Post with id ${id} not found`)
-    this.posts[postIndex] = { ...this.posts[postIndex], ...updatedPost } as Post
-    return this.posts[postIndex]
+  async update(id: number, updatedPost: Partial<Omit<Post, 'id'>>) {
+    const post = await this.one(id)
+    const newPost = { ...post, ...updatedPost }
+    const result = await this.db
+      .prepare('UPDATE posts SET title = ?, content = ? WHERE id = ?')
+      .bind(newPost.title, newPost.content, id)
+      .run()
+    if (!result.success) throw new Error(`Failed to update post with id ${id}`)
   }
 
-  delete(id: number) {
-    const postIndex = this.posts.findIndex((post) => post.id === id)
-    if (postIndex === -1) throw new Error(`Post with id ${id} not found`)
-    const deletedPost = this.posts.splice(postIndex, 1)[0]
-    return deletedPost
+  async delete(id: number) {
+    const result = await this.db
+      .prepare('DELETE FROM posts WHERE id = ?')
+      .bind(id)
+      .run()
+    if (!result.success) throw new Error(`Failed to delete post with id ${id}`)
   }
 }
