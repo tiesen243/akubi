@@ -7,7 +7,10 @@ export default defineConfig({
     observability: { enabled: true },
     entrypoint: './workers/app.ts',
     env: {
-      DB: bindings.d1(),
+      DB: bindings.d1({
+        id: 'baddbdc9-4fbc-4485-a7b9-2cd862185e69',
+        name: 'akubi-db',
+      }),
     },
   },
 })

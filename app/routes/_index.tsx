@@ -10,12 +10,16 @@ import {
   loadHandles,
   prefetchEntry,
 } from '@trpc/tanstack-react-query/unstable-handles'
-import { Suspense } from 'react'
+import { XIcon } from 'lucide-react'
+import React, { Suspense } from 'react'
 import { Link } from 'react-router'
+
+import type { Post } from '@/server/services/post.service'
 
 import { Button } from '@/components/ui/button'
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -66,19 +70,44 @@ const PostList: React.FC<Route.ComponentProps['loaderData']['handles']> = ({
     <section className='grid gap-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'>
       {data.map((post) => (
         <Link key={post.id} to={`/${post.id}`}>
-          <Card>
-            <CardHeader>
-              <CardTitle>{post.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className='line-clamp-1'>
-                {post.content}
-              </CardDescription>
-            </CardContent>
-          </Card>
+          <PostCard post={post} />
         </Link>
       ))}
     </section>
+  )
+}
+
+const PostCard: React.FC<{ post: Post }> = ({ post }) => {
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    ...trpc.post.delete.mutationOptions(),
+    onSuccess: () => queryClient.invalidateQueries(trpc.post.all.queryFilter()),
+  })
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{post.title}</CardTitle>
+        <CardAction>
+          <Button
+            variant='outline'
+            size='icon-xs'
+            onClick={(e) => {
+              e.preventDefault()
+              return mutation.mutate(post.id)
+            }}
+            disabled={mutation.isPending}
+          >
+            <XIcon />
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <CardDescription className='line-clamp-1'>
+          {post.content}
+        </CardDescription>
+      </CardContent>
+    </Card>
   )
 }
 
