@@ -129,11 +129,13 @@ const CreatePost: React.FC = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className='my-4 flex flex-col gap-2'>
-      <Input name='title' placeholder='Title' required />
-      <Input name='content' placeholder='Content' required />
+    <form onSubmit={handleSubmit} className='my-4'>
+      <fieldset className='flex flex-col gap-2' disabled={mutation.isPending}>
+        <Input name='title' placeholder='Title' required />
+        <Input name='content' placeholder='Content' required />
 
-      <Button type='submit'>Create Post</Button>
+        <Button type='submit'>Create Post</Button>
+      </fieldset>
     </form>
   )
 }
